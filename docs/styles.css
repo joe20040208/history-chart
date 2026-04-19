@@ -1,0 +1,101 @@
+:root {
+  --bg: #0e1117;
+  --panel: #161b22;
+  --panel2: #1f2630;
+  --border: #2a3240;
+  --fg: #e6edf3;
+  --muted: #8b949e;
+  --accent: #58a6ff;
+  --green: #3fb950;
+  --red:   #f85149;
+  --yellow:#d29922;
+  font-size: 13px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+#app { display: grid; grid-template-columns: 280px 220px 1fr; height: 100vh; }
+
+#sidebar {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+#list-pane {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+#sidebar h1 { font-size: 14px; margin: 12px 14px 4px; letter-spacing: 0.5px; }
+#summary { margin: 0 14px 8px; font-size: 11px; }
+
+.filters { padding: 8px 14px; overflow-y: auto; flex: 1; }
+.filters h2 { font-size: 11px; text-transform: uppercase; color: var(--muted);
+  margin: 8px 0 6px; letter-spacing: 0.8px; }
+.filters label { display: block; font-size: 11px; color: var(--muted); margin: 8px 0 2px; }
+.filters input[type=text] { width: 100%; padding: 5px 8px; border-radius: 4px;
+  background: var(--panel2); border: 1px solid var(--border);
+  color: var(--fg); font-size: 12px; font-family: inherit; outline: none; margin-bottom: 6px; }
+.filters input[type=text]:focus { border-color: var(--accent); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.chip, .preset {
+  background: var(--panel2); border: 1px solid var(--border); color: var(--muted);
+  border-radius: 4px; padding: 3px 8px; font-size: 11px; cursor: pointer;
+  font-family: inherit;
+}
+.chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.presets { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.preset:hover { border-color: var(--accent); color: var(--fg); }
+.preset-my { border-color: #d29922; color: #d29922; }
+.preset-my:hover { background: #d29922; color: #0e1117; border-color: #d29922; }
+
+.table-wrap { flex: 1; overflow: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { position: sticky; top: 0; background: var(--panel); z-index: 1; border-bottom: 1px solid var(--border); }
+th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--border);
+  white-space: nowrap; }
+th { cursor: pointer; color: var(--muted); font-weight: 600; }
+th:hover { color: var(--fg); }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--panel2); }
+tbody tr.active { background: #1f3a5f; }
+td.pos { color: var(--green); }
+td.tag { color: var(--yellow); font-size: 12px; }
+
+#chart-pane { display: flex; flex-direction: column; overflow: hidden; }
+#chart-header { padding: 10px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 18px; }
+#chart-title { font-size: 16px; font-weight: 600; }
+#chart-meta { color: var(--muted); font-size: 12px; flex: 1; }
+.tv { color: var(--accent); text-decoration: none; font-size: 12px; }
+.tv:hover { text-decoration: underline; }
+
+#chart-container { flex: 1; min-height: 0; }
+
+#insights {
+  padding: 10px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+  font-size: 12px;
+  max-height: 28vh; overflow: auto;
+}
+#insights h3 { margin: 4px 0 6px; font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.5px; }
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 6px 18px; }
+.kv > div { display: flex; justify-content: space-between; border-bottom: 1px dotted var(--border); padding: 2px 0; }
+.kv span:first-child { color: var(--muted); }
+
+.muted { color: var(--muted); }
+
+#searchBox {
+  width: 100%; padding: 5px 9px; border-radius: 5px;
+  background: var(--panel2); border: 1px solid var(--border);
+  color: var(--fg); font-size: 12px; font-family: inherit; outline: none;
+}
+#searchBox:focus { border-color: var(--accent); }

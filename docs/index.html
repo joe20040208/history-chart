@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>History Chart — Explosive Movers</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <h1>History Chart</h1>
+    <div id="summary" class="muted">loading…</div>
+    <div style="padding:6px 14px 4px">
+      <input type="text" id="searchBox" placeholder="Search ticker or name…" autocomplete="off">
+    </div>
+
+    <section class="filters">
+      <h2>Filters</h2>
+
+      <label>% gain ≥</label>
+      <input type="text" id="pctSlider" placeholder="e.g. 300" value="300">
+
+      <label>Perf 3M ≥ %</label>
+      <input type="text" id="perf3mInput" placeholder="e.g. 30" value="">
+
+      <label>Perf 6M ≥ %</label>
+      <input type="text" id="perf6mInput" placeholder="e.g. 20" value="">
+
+      <label>Market cap $ <span class="muted" style="font-size:10px">(no data = excluded)</span></label>
+      <div style="display:flex; gap:8px">
+        <div style="flex:1">
+          <span style="font-size:11px; color:#666">Min (B)</span>
+          <input type="text" id="mcapMinSlider" placeholder="0" value="0" style="width:100%">
+        </div>
+        <div style="flex:1">
+          <span style="font-size:11px; color:#666">Max (B)</span>
+          <input type="text" id="mcapMaxSlider" placeholder="999" value="999" style="width:100%">
+        </div>
+      </div>
+
+      <label>Avg 30d share vol ≥ K shares</label>
+      <input type="text" id="shareVolSlider" placeholder="e.g. 500" value="0">
+
+      <label>Min start price ≥ $</label>
+      <input type="text" id="priceSlider" placeholder="e.g. 5" value="1">
+
+      <label>Exchange</label>
+      <div id="exchangeChips" class="chips">
+        <button class="chip on" data-e="NASDAQ">NASDAQ</button>
+        <button class="chip on" data-e="NYSE">NYSE</button>
+        <button class="chip on" data-e="NYSE MKT">NYSE MKT</button>
+        <button class="chip on" data-e="NYSE ARCA">NYSE ARCA</button>
+        <button class="chip on" data-e="AMEX">AMEX</button>
+        <button class="chip on" data-e="BATS">BATS</button>
+        <button class="chip on" data-e="HK">HK</button>
+        <button class="chip on" data-e="TW">TW</button>
+        <button class="chip on" data-e="TWO">TWO</button>
+        <button class="chip on" data-e="KO">KO</button>
+        <button class="chip on" data-e="KQ">KQ</button>
+        <button class="chip on" data-e="—">Other</button>
+      </div>
+
+      <label>Country</label>
+      <div id="countryChips" class="chips">
+        <button class="chip on" data-c="US">US</button>
+        <button class="chip on" data-c="HK">HK</button>
+        <button class="chip on" data-c="TW">TW</button>
+        <button class="chip on" data-c="JP">JP</button>
+        <button class="chip on" data-c="KR">KR</button>
+      </div>
+
+      <label>Setup tag</label>
+      <div id="setupChips" class="chips">
+        <button class="chip on" data-s="vcp">VCP</button>
+        <button class="chip on" data-s="flat_base">Flat base</button>
+        <button class="chip on" data-s="ipo_base">IPO base</button>
+        <button class="chip on" data-s="power_trend">Power trend</button>
+        <button class="chip on" data-s="stage2_breakout">Stage-2 BO</button>
+        <button class="chip on" data-s="pocket_pivot">Pocket pivot</button>
+        <button class="chip on" data-s="none">Untagged</button>
+      </div>
+
+      <div class="presets">
+        <button class="preset preset-my" data-preset="myfilter">⚡ My Filter</button>
+      </div>
+    </section>
+  </aside>
+
+  <div id="list-pane">
+    <section class="table-wrap">
+      <table id="tbl">
+        <thead><tr>
+          <th data-sort="ticker">Ticker</th>
+          <th data-sort="country">C</th>
+          <th data-sort="start_date">Start</th>
+          <th data-sort="pct_gain">Gain</th>
+          <th data-sort="days_to_peak">Days</th>
+          <th data-sort="start_mcap_usd">Mcap</th>
+          <th data-sort="setup_tag">Setup</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </div>
+
+  <main id="chart-pane">
+    <header id="chart-header">
+      <div id="chart-title" class="muted">Pick a row</div>
+      <div id="chart-meta"></div>
+      <a id="tv-link" href="#" target="_blank" class="tv">open in TradingView ↗</a>
+    </header>
+    <div id="chart-container"></div>
+    <section id="insights"></section>
+  </main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
