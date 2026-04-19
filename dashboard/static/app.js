@@ -1,13 +1,17 @@
-// History Chart dashboard app — static GitHub Pages version
+// History Chart dashboard app — filter, sort, flip, render
 const state = {
   all: [],
   view: [],
   selected: null,
   sort: { key: "pct_gain", dir: -1 },
-  hasPerf3m: false,
-  hasPerf6m: false,
-  minAdrPct: 0,
-  excludeSectors: [],
+  chart: null,
+  candles: null,
+  volume: null,
+  ema10: null,
+  ema20: null,
+  ema50: null,
+  minAdrPct: 0,          // ATR% threshold (0 = off); 0.05 = 5%
+  excludeSectors: [],    // sector names to exclude (exact match, case-insensitive)
 };
 
 const $ = (s) => document.querySelector(s);
@@ -18,9 +22,10 @@ const fmtPct = (v) => v == null ? "—" : v.toFixed(1) + "%";
 // ──────────────── data load ────────────────
 async function loadRunners() {
   try {
-    const res = await fetch("runners.json");
+    const res = await fetch("/api/runners");
     if (!res.ok) throw new Error(await res.text());
     const raw = await res.json();
+    // strip junk: cap at 3000%, min $1 start price, min 5 days to peak (removes 1-day data errors)
     state.all = raw.filter(r =>
       r.pct_gain <= 3000
       && r.start_price >= 1.0
@@ -31,8 +36,7 @@ async function loadRunners() {
     $("#summary").textContent = `${state.all.length.toLocaleString()} historical events loaded`;
     applyFilters();
   } catch (e) {
-    console.error("loadRunners error:", e);
-    $("#summary").textContent = "Error: " + e.message;
+    $("#summary").textContent = "No data yet — run the fetch + screen scripts first.";
     $("#summary").style.color = "var(--red)";
   }
 }
@@ -96,7 +100,7 @@ function sortView() {
 // ──────────────── table ────────────────
 function renderTable() {
   const tbody = $("#tbl tbody");
-  const rows = state.view.slice(0, 2000);
+  const rows = state.view.slice(0, 2000);  // cap render
   tbody.innerHTML = rows.map((r, i) => `
     <tr data-i="${i}" class="${state.selected === r ? "active" : ""}">
       <td>${r.ticker}</td>
@@ -114,40 +118,96 @@ function renderTable() {
   };
 }
 
-// ──────────────── TradingView chart ────────────────
-function tvSymbol(r) {
-  const map = { US: "", HK: "HKEX:", TW: "TWSE:", JP: "TSE:", KR: "KRX:" };
-  const prefix = map[r.country] ?? "";
-  return `${prefix}${r.ticker}`;
+// ──────────────── chart ────────────────
+function ensureChart() {
+  if (state.chart) return;
+  const el = $("#chart-container");
+  state.chart = LightweightCharts.createChart(el, {
+    layout: { background: { color: "#0e1117" }, textColor: "#e6edf3" },
+    grid: { vertLines: { color: "#1f2630" }, horzLines: { color: "#1f2630" } },
+    crosshair: { mode: 1 },
+    rightPriceScale: { borderColor: "#2a3240" },
+    timeScale: { borderColor: "#2a3240", rightOffset: 12, barSpacing: 5 },
+  });
+  // Candlesticks on right scale — leave bottom 20% for volume
+  state.candles = state.chart.addCandlestickSeries({
+    upColor: "#3fb950", downColor: "#f85149",
+    borderUpColor: "#3fb950", borderDownColor: "#f85149",
+    wickUpColor: "#3fb950", wickDownColor: "#f85149",
+    priceScaleId: "right",
+  });
+  state.chart.priceScale("right").applyOptions({
+    scaleMargins: { top: 0.05, bottom: 0.2 },
+  });
+
+  // Volume as overlay on its own named scale, bottom 20% only
+  state.volume = state.chart.addHistogramSeries({
+    priceFormat: { type: "volume" },
+    priceScaleId: "vol",
+    color: "#2a3240",
+    lastValueVisible: false,
+    priceLineVisible: false,
+  });
+  state.chart.priceScale("vol").applyOptions({
+    scaleMargins: { top: 0.8, bottom: 0 },
+    visible: false,
+    autoScale: true,
+  });
+
+  const ema = (color) => state.chart.addLineSeries({
+    color, lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+  state.ema10 = ema("#d29922");
+  state.ema20 = ema("#58a6ff");
+  state.ema50 = ema("#a371f7");
+
+  window.addEventListener("resize", () => state.chart.applyOptions({
+    width: el.clientWidth, height: el.clientHeight }));
 }
 
-function renderChart(r) {
-  const container = $("#chart-container");
-  container.innerHTML = "";
-
-  const widget = document.createElement("div");
-  widget.id = "tv-widget";
-  widget.style.width = "100%";
-  widget.style.height = "100%";
-  container.appendChild(widget);
-
-  new TradingView.widget({
-    container_id: "tv-widget",
-    symbol: tvSymbol(r),
-    interval: "D",
-    timezone: "Etc/UTC",
-    theme: "dark",
-    style: "1",
-    locale: "en",
-    hide_top_toolbar: false,
-    hide_legend: false,
-    save_image: false,
-    allow_symbol_change: true,
-    studies: ["MAExp@tv-basicstudies", "MAExp@tv-basicstudies", "MAExp@tv-basicstudies"],
-    width: "100%",
-    height: "100%",
-    autosize: true,
+function calcEMA(candles, span) {
+  const k = 2 / (span + 1);
+  let prev = null;
+  return candles.map(c => {
+    const v = c.close;
+    prev = prev == null ? v : v * k + prev * (1 - k);
+    return { time: c.time, value: prev };
   });
+}
+
+function destroyChart() {
+  if (state.chart) { state.chart.remove(); state.chart = null; }
+}
+
+async function renderChart(row) {
+  destroyChart();
+  ensureChart();
+  // Pull ±120 days around the event so you see setup + aftermath
+  const start = new Date(row.start_date); start.setDate(start.getDate() - 120);
+  const end = new Date(row.peak_date); end.setDate(end.getDate() + 120);
+  const qs = new URLSearchParams({
+    from_: start.toISOString().slice(0, 10),
+    to: end.toISOString().slice(0, 10),
+  });
+  const url = `/api/ohlc/${row.country}/${row.exchange}/${encodeURIComponent(row.ticker)}?${qs}`;
+  const res = await fetch(url);
+  if (!res.ok) { $("#chart-meta").textContent = "chart data missing"; return; }
+  const bars = await res.json();
+  state.candles.setData(bars);
+  state.volume.setData(bars.map(b => ({
+    time: b.time,
+    value: (b.volume > 0 && isFinite(b.volume)) ? b.volume : 0,
+    color: b.close >= b.open ? "#1a5a2d" : "#5f1f24",
+  })));
+  state.ema10.setData(calcEMA(bars, 10));
+  state.ema20.setData(calcEMA(bars, 20));
+  state.ema50.setData(calcEMA(bars, 50));
+
+  // Markers for start / peak
+  state.candles.setMarkers([
+    { time: row.start_date, position: "belowBar", color: "#58a6ff", shape: "arrowUp", text: "START" },
+    { time: row.peak_date,  position: "aboveBar", color: "#d29922", shape: "arrowDown", text: "PEAK" },
+  ]);
+  state.chart.timeScale().fitContent();
 }
 
 // ──────────────── selection / insights ────────────────
@@ -161,10 +221,16 @@ function selectRow(i) {
   $("#chart-title").textContent = `${r.ticker}.${r.exchange} — ${r.name || ""}`;
   $("#chart-meta").textContent =
     `${r.start_date} → ${r.peak_date} · +${r.pct_gain.toFixed(0)}% in ${r.days_to_peak}d · ${r.sector || "—"}`;
-  $("#tv-link").href = `https://www.tradingview.com/chart/?symbol=${tvSymbol(r)}`;
+  $("#tv-link").href = tvUrl(r);
 
   renderChart(r);
   renderInsights(r);
+}
+
+function tvUrl(r) {
+  const map = { US: "", HK: "HKEX:", TW: "TWSE:", JP: "TSE:", KR: "KRX:" };
+  const prefix = map[r.country] ?? "";
+  return `https://www.tradingview.com/chart/?symbol=${prefix}${r.ticker}`;
 }
 
 function renderInsights(r) {
@@ -175,8 +241,6 @@ function renderInsights(r) {
     ["Mcap at start", fmtMcap(r.start_mcap_usd)],
     ["Avg 30d $vol", fmtVol(r.start_dollar_vol_30d_usd)],
     ["Post-90d return", fmtPct(r.post_90d_return)],
-    ["Perf 3M (pre)", r.pre_perf_3m != null ? r.pre_perf_3m.toFixed(1) + "%" : "—"],
-    ["Perf 6M (pre)", r.pre_perf_6m != null ? r.pre_perf_6m.toFixed(1) + "%" : "—"],
     ["52w-high ratio (pre)", r.pre_52w_high ?? "—"],
     ["Consolidation days", r.pre_consolidation_days],
     ["ATR% (pre 20d)", r.pre_atr_pct != null ? (r.pre_atr_pct * 100).toFixed(2) + "%" : "—"],
@@ -221,7 +285,10 @@ function buildCommentary(r) {
 
 // ──────────────── wiring ────────────────
 function wire() {
-  const bind = (id) => $(id).addEventListener("input", applyFilters);
+  // text input live update
+  const bind = (id) => {
+    $(id).addEventListener("input", applyFilters);
+  };
   $("#searchBox").addEventListener("input", applyFilters);
   bind("#pctSlider");
   bind("#mcapMinSlider");
@@ -231,14 +298,17 @@ function wire() {
   bind("#perf3mInput");
   bind("#perf6mInput");
 
+  // toggle chips
   document.querySelectorAll(".chip").forEach(c =>
     c.addEventListener("click", () => { c.classList.toggle("on"); applyFilters(); }));
 
+
+  // preset definitions
   const PRESETS = {
     usfilter: {
       pct: 50, price: 5, shareVol: 500,
       mcapMin: 0.5, mcapMax: 20,
-      exchanges: ["NASDAQ", "NYSE"],
+      exchanges: ["NASDAQ","NYSE"],
       countries: ["US"],
       minAdrPct: 0.05,
       excludeSectors: ["Health Services", "Health Technology"],
@@ -247,7 +317,7 @@ function wire() {
     twfilter: {
       pct: 50, price: 150, shareVol: 500,   // TWD ~$5 USD
       mcapMin: 0, mcapMax: 0,
-      exchanges: ["TW", "TWO"],
+      exchanges: ["TW","TWO"],
       countries: ["TW"],
       minAdrPct: 0,
       excludeSectors: [],
@@ -256,7 +326,7 @@ function wire() {
     krfilter: {
       pct: 50, price: 7000, shareVol: 500,  // KRW ~$5 USD
       mcapMin: 0, mcapMax: 0,
-      exchanges: ["KO", "KQ"],
+      exchanges: ["KO","KQ"],
       countries: ["KR"],
       minAdrPct: 0,
       excludeSectors: [],
@@ -306,6 +376,7 @@ function wire() {
       if (cfg) applyPreset(cfg);
     }));
 
+  // sort
   document.querySelectorAll("th[data-sort]").forEach(th =>
     th.addEventListener("click", () => {
       const key = th.dataset.sort;
@@ -314,6 +385,7 @@ function wire() {
       sortView(); renderTable();
     }));
 
+  // keyboard flip
   document.addEventListener("keydown", (e) => {
     if (!state.selected) return;
     const idx = state.view.indexOf(state.selected);
@@ -322,8 +394,5 @@ function wire() {
   });
 }
 
-// Load TradingView widget script then start
-const tvScript = document.createElement("script");
-tvScript.src = "https://s3.tradingview.com/tv.js";
-tvScript.onload = () => { wire(); loadRunners(); };
-document.head.appendChild(tvScript);
+wire();
+loadRunners();
