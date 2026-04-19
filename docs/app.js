@@ -116,8 +116,16 @@ function renderTable() {
 
 // ──────────────── TradingView chart ────────────────
 function tvSymbol(r) {
-  const map = { US: "", HK: "HKEX:", TW: "TWSE:", JP: "TSE:", KR: "KRX:" };
-  const prefix = map[r.country] ?? "";
+  const map = {
+    "NASDAQ": "", "NYSE": "", "NYSE MKT": "", "NYSE ARCA": "", "AMEX": "", "BATS": "",
+    "TW":  "TWSE:",
+    "TWO": "TPEX:",
+    "HK":  "HKEX:",
+    "KO":  "KRX:",
+    "KQ":  "KOSDAQ:",
+    "TSE": "TSE:",
+  };
+  const prefix = map[r.sub_exchange] ?? "";
   return `${prefix}${r.ticker}`;
 }
 
