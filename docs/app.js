@@ -274,20 +274,11 @@ function wire() {
   };
 
   function applyPreset(cfg) {
-    const set = (id, val) => { $(id).value = val; };
-    set("#pctSlider",      cfg.pct);
-    set("#priceSlider",    cfg.price);
-    set("#shareVolSlider", cfg.shareVol);
-    set("#mcapMinSlider",  cfg.mcapMin);
-    set("#mcapMaxSlider",  cfg.mcapMax);
-    set("#perf3mInput",    cfg.perf3m ?? "");
-    set("#perf6mInput",    cfg.perf6m ?? "");
+    // Only switch exchange + country chips — keep all other filter values as-is
     document.querySelectorAll("#exchangeChips .chip").forEach(c =>
       c.classList.toggle("on", cfg.exchanges.includes(c.dataset.e)));
     document.querySelectorAll("#countryChips .chip").forEach(c =>
       c.classList.toggle("on", cfg.countries.includes(c.dataset.c)));
-    state.minAdrPct = cfg.minAdrPct ?? 0;
-    state.excludeSectors = cfg.excludeSectors ?? [];
     applyFilters();
   }
 
