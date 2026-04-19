@@ -123,7 +123,6 @@ function tvSymbol(r) {
     "HK":  "HKEX:",
     "KO":  "KRX:",
     "KQ":  "KOSDAQ:",
-    "TSE": "TSE:",
   };
   const prefix = map[r.sub_exchange] ?? "";
   return `${prefix}${r.ticker}`;
@@ -132,6 +131,19 @@ function tvSymbol(r) {
 function renderChart(r) {
   const container = $("#chart-container");
   container.innerHTML = "";
+
+  // TradingView widget only supports US stocks in embed mode
+  if (r.country !== "US") {
+    const url = `https://www.tradingview.com/chart/?symbol=${tvSymbol(r)}`;
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--muted)">
+        <div style="font-size:14px">TradingView 嵌入圖表不支援非美國市場</div>
+        <a href="${url}" target="_blank" style="background:var(--accent);color:#fff;padding:10px 24px;border-radius:6px;text-decoration:none;font-size:14px">
+          在 TradingView 開啟 ${tvSymbol(r)} ↗
+        </a>
+      </div>`;
+    return;
+  }
 
   const widget = document.createElement("div");
   widget.id = "tv-widget";
@@ -151,7 +163,6 @@ function renderChart(r) {
     hide_legend: false,
     save_image: false,
     allow_symbol_change: true,
-    studies: ["MAExp@tv-basicstudies", "MAExp@tv-basicstudies", "MAExp@tv-basicstudies"],
     width: "100%",
     height: "100%",
     autosize: true,
@@ -275,15 +286,6 @@ function wire() {
       mcapMin: 0, mcapMax: 0,
       exchanges: ["HK"],
       countries: ["HK"],
-      minAdrPct: 0,
-      excludeSectors: [],
-      perf3m: 30, perf6m: 50,
-    },
-    jpfilter: {
-      pct: 50, price: 750, shareVol: 500,   // JPY ~$5 USD
-      mcapMin: 0, mcapMax: 0,
-      exchanges: ["TSE"],
-      countries: ["JP"],
       minAdrPct: 0,
       excludeSectors: [],
       perf3m: 30, perf6m: 50,

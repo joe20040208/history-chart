@@ -228,8 +228,15 @@ function selectRow(i) {
 }
 
 function tvUrl(r) {
-  const map = { US: "", HK: "HKEX:", TW: "TWSE:", JP: "TSE:", KR: "KRX:" };
-  const prefix = map[r.country] ?? "";
+  const map = {
+    "NASDAQ": "", "NYSE": "", "NYSE MKT": "", "NYSE ARCA": "", "AMEX": "", "BATS": "",
+    "TW":  "TWSE:",
+    "TWO": "TPEX:",
+    "HK":  "HKEX:",
+    "KO":  "KRX:",
+    "KQ":  "KOSDAQ:",
+  };
+  const prefix = map[r.sub_exchange] ?? "";
   return `https://www.tradingview.com/chart/?symbol=${prefix}${r.ticker}`;
 }
 
@@ -337,15 +344,6 @@ function wire() {
       mcapMin: 0, mcapMax: 0,
       exchanges: ["HK"],
       countries: ["HK"],
-      minAdrPct: 0,
-      excludeSectors: [],
-      perf3m: 30, perf6m: 50,
-    },
-    jpfilter: {
-      pct: 50, price: 750, shareVol: 500,   // JPY ~$5 USD
-      mcapMin: 0, mcapMax: 0,
-      exchanges: ["TSE"],
-      countries: ["JP"],
       minAdrPct: 0,
       excludeSectors: [],
       perf3m: 30, perf6m: 50,
