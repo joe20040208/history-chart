@@ -235,13 +235,40 @@ function wire() {
     c.addEventListener("click", () => { c.classList.toggle("on"); applyFilters(); }));
 
   const PRESETS = {
-    myfilter: {
+    usfilter: {
       pct: 50, price: 5, shareVol: 500,
       mcapMin: 0.5, mcapMax: 20,
       exchanges: ["NASDAQ", "NYSE"],
       countries: ["US"],
       minAdrPct: 0.05,
       excludeSectors: ["Health Services", "Health Technology"],
+      perf3m: 30, perf6m: 50,
+    },
+    twfilter: {
+      pct: 50, price: 0, shareVol: 500,
+      mcapMin: 0, mcapMax: 0,
+      exchanges: ["TW", "TWO"],
+      countries: ["TW"],
+      minAdrPct: 0,
+      excludeSectors: [],
+      perf3m: 30, perf6m: 50,
+    },
+    krfilter: {
+      pct: 50, price: 0, shareVol: 500,
+      mcapMin: 0, mcapMax: 0,
+      exchanges: ["KO", "KQ"],
+      countries: ["KR"],
+      minAdrPct: 0,
+      excludeSectors: [],
+      perf3m: 30, perf6m: 50,
+    },
+    hkfilter: {
+      pct: 50, price: 0, shareVol: 500,
+      mcapMin: 0, mcapMax: 0,
+      exchanges: ["HK"],
+      countries: ["HK"],
+      minAdrPct: 0,
+      excludeSectors: [],
       perf3m: 30, perf6m: 50,
     },
   };
