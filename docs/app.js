@@ -132,6 +132,21 @@ function renderChart(r) {
   const container = $("#chart-container");
   container.innerHTML = "";
 
+  // TradingView's free embed widget is licensed for US exchanges only —
+  // KRX/TWSE/TPEX/HKEX symbols load but display "only available on TradingView".
+  // Show a link button instead so the user can open the full chart on tradingview.com.
+  if (r.country !== "US") {
+    const url = `https://www.tradingview.com/chart/?symbol=${tvSymbol(r)}`;
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--muted)">
+        <div style="font-size:14px">TradingView 嵌入圖表不支援非美國市場</div>
+        <a href="${url}" target="_blank" style="background:var(--accent);color:#fff;padding:10px 24px;border-radius:6px;text-decoration:none;font-size:14px">
+          在 TradingView 開啟 ${tvSymbol(r)} ↗
+        </a>
+      </div>`;
+    return;
+  }
+
   const widget = document.createElement("div");
   widget.id = "tv-widget";
   widget.style.width = "100%";
