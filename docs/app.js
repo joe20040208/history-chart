@@ -50,7 +50,8 @@ function applyFilters() {
   };
   const minPct      = parseNum($("#pctSlider").value, 0);
   const minMcap     = parseNum($("#mcapMinSlider").value, 0) * 1e9;
-  const maxMcap     = parseNum($("#mcapMaxSlider").value, 999) * 1e9;
+  const maxMcapRaw  = parseNum($("#mcapMaxSlider").value, 0);
+  const maxMcap     = (maxMcapRaw === 0 ? Infinity : maxMcapRaw * 1e9);
   const minShareVol = parseNum($("#shareVolSlider").value, 0) * 1e3;
   const minPrice    = parseNum($("#priceSlider").value, 0);
   const minPerf3m   = $("#perf3mInput").value.trim() === "" ? null : parseNum($("#perf3mInput").value, null);
@@ -62,7 +63,7 @@ function applyFilters() {
   state.view = state.all.filter(r =>
     r.pct_gain >= minPct
     && (minMcap === 0 || (r.start_mcap_usd != null && r.start_mcap_usd >= minMcap))
-    && (maxMcap >= 999e9 || (r.start_mcap_usd != null && r.start_mcap_usd <= maxMcap))
+    && (maxMcap === Infinity || (r.start_mcap_usd != null && r.start_mcap_usd <= maxMcap))
     && (minShareVol === 0 || (r.avg_vol_30d_shares != null && r.avg_vol_30d_shares >= minShareVol))
     && (r.start_price ?? 0) >= minPrice
     && countries.has(r.country)
