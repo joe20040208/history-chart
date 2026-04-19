@@ -122,7 +122,7 @@ function tvSymbol(r) {
     "TWO": "TPEX:",
     "HK":  "HKEX:",
     "KO":  "KRX:",
-    "KQ":  "KOSDAQ:",
+    "KQ":  "KRX:",
   };
   const prefix = map[r.sub_exchange] ?? "";
   return `${prefix}${r.ticker}`;
@@ -131,19 +131,6 @@ function tvSymbol(r) {
 function renderChart(r) {
   const container = $("#chart-container");
   container.innerHTML = "";
-
-  // TradingView widget only supports US stocks in embed mode
-  if (r.country !== "US") {
-    const url = `https://www.tradingview.com/chart/?symbol=${tvSymbol(r)}`;
-    container.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--muted)">
-        <div style="font-size:14px">TradingView 嵌入圖表不支援非美國市場</div>
-        <a href="${url}" target="_blank" style="background:var(--accent);color:#fff;padding:10px 24px;border-radius:6px;text-decoration:none;font-size:14px">
-          在 TradingView 開啟 ${tvSymbol(r)} ↗
-        </a>
-      </div>`;
-    return;
-  }
 
   const widget = document.createElement("div");
   widget.id = "tv-widget";

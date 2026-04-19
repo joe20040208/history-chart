@@ -234,7 +234,7 @@ function tvUrl(r) {
     "TWO": "TPEX:",
     "HK":  "HKEX:",
     "KO":  "KRX:",
-    "KQ":  "KOSDAQ:",
+    "KQ":  "KRX:",
   };
   const prefix = map[r.sub_exchange] ?? "";
   return `https://www.tradingview.com/chart/?symbol=${prefix}${r.ticker}`;
