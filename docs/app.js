@@ -31,7 +31,8 @@ async function loadRunners() {
     $("#summary").textContent = `${state.all.length.toLocaleString()} historical events loaded`;
     applyFilters();
   } catch (e) {
-    $("#summary").textContent = "Failed to load data.";
+    console.error("loadRunners error:", e);
+    $("#summary").textContent = "Error: " + e.message;
     $("#summary").style.color = "var(--red)";
   }
 }
