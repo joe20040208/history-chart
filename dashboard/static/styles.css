@@ -72,6 +72,7 @@ tbody tr:hover { background: var(--panel2); }
 tbody tr.active { background: #1f3a5f; }
 td.pos { color: var(--green); }
 td.tag { color: var(--yellow); font-size: 12px; }
+.date-range { display: block; font-size: 10px; color: var(--muted); }
 
 #chart-pane { display: flex; flex-direction: column; overflow: hidden; }
 #chart-header { padding: 10px 18px; border-bottom: 1px solid var(--border);
