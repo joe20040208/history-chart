@@ -26,11 +26,23 @@ async function loadRunners() {
     const res = await fetch("/api/runners");
     if (!res.ok) throw new Error(await res.text());
     const raw = await res.json();
+    const EXCLUDED_INDUSTRIES = new Set([
+      "Biotechnology",
+      "Drug Manufacturers - General",
+      "Drug Manufacturers - Specialty & Generic",
+      "Health Care Plans", "Healthcare Plans",
+      "Health Information Services",
+      "Medical Care Facilities",
+      "Medical Distribution",
+      "Pharmaceutical Retailers",
+      "REIT - Healthcare Facilities",
+    ]);
     // strip junk: cap at 3000%, min $1 start price, min 5 days to peak (removes 1-day data errors)
     state.all = raw.filter(r =>
       r.pct_gain <= 3000
       && r.start_price >= 1.0
       && r.days_to_peak >= 5
+      && !EXCLUDED_INDUSTRIES.has(r.industry || "")
     );
     state.hasPerf3m = state.all.length > 0 && state.all[0].pre_perf_3m !== undefined;
     state.hasPerf6m = state.all.length > 0 && state.all[0].pre_perf_6m !== undefined;
@@ -321,8 +333,8 @@ function wire() {
       exchanges: ["NASDAQ","NYSE"],
       countries: ["US"],
       minAdrPct: 0.05,
-      excludeSectors: ["Health Services", "Health Technology"],
-      excludeIndustries: ["Biotechnology"],
+      excludeSectors: [],
+      excludeIndustries: [],
       perf3m: 30, perf6m: 50,
     },
     twfilter: {
