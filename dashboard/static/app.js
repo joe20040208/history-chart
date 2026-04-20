@@ -104,8 +104,6 @@ function renderTable() {
   tbody.innerHTML = rows.map((r, i) => `
     <tr data-i="${i}" class="${state.selected === r ? "active" : ""}">
       <td>${r.ticker}</td>
-      <td>${r.country}</td>
-      <td>${r.start_date}</td>
       <td class="pos">+${r.pct_gain.toFixed(0)}%</td>
       <td>${r.days_to_peak}</td>
       <td>${fmtMcap(r.start_mcap_usd)}</td>
