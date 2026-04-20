@@ -5,3 +5,4 @@ data/ohlc/
 data/fundamentals/
 data/universe/
 *.pyc
+.claude/worktrees/
