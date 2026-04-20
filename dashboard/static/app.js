@@ -10,6 +10,9 @@ const state = {
   ema10: null,
   ema20: null,
   ema50: null,
+  bandBreakout: null,
+  bandPostpeak: null,
+  bandRow: null,
   minAdrPct: 0,          // ATR% threshold (0 = off); 0.05 = 5%
   excludeSectors: [],    // sector names to exclude (exact match, case-insensitive)
 };
