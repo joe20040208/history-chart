@@ -8,6 +8,7 @@ const state = {
   hasPerf6m: false,
   minAdrPct: 0,
   excludeSectors: [],
+  excludeIndustries: [],
 };
 
 const $ = (s) => document.querySelector(s);
@@ -75,6 +76,8 @@ function applyFilters() {
     && (state.minAdrPct === 0 || (r.pre_atr_pct != null && r.pre_atr_pct >= state.minAdrPct))
     && (state.excludeSectors.length === 0 || !state.excludeSectors.some(
          s => (r.sector || "").toLowerCase() === s.toLowerCase()))
+    && (state.excludeIndustries.length === 0 || !state.excludeIndustries.some(
+         s => (r.industry || "").toLowerCase() === s.toLowerCase()))
   );
   sortView();
   renderTable();
@@ -263,6 +266,7 @@ function wire() {
       countries: ["US"],
       minAdrPct: 0.05,
       excludeSectors: ["Health Services", "Health Technology"],
+      excludeIndustries: ["Biotechnology"],
       perf3m: 30, perf6m: 50,
     },
     twfilter: {
@@ -309,6 +313,7 @@ function wire() {
       c.classList.toggle("on", cfg.countries.includes(c.dataset.c)));
     state.minAdrPct = cfg.minAdrPct ?? 0;
     state.excludeSectors = cfg.excludeSectors ?? [];
+    state.excludeIndustries = cfg.excludeIndustries ?? [];
     applyFilters();
   }
 
