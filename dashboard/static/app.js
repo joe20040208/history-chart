@@ -175,8 +175,57 @@ function calcEMA(candles, span) {
   });
 }
 
+function makeBandEl(color) {
+  const el = document.createElement("div");
+  el.style.cssText = `position:absolute;top:0;pointer-events:none;display:none;background:${color};`;
+  return el;
+}
+
+function updateBands(row) {
+  if (!state.chart || !state.bandBreakout || !row) return;
+  const ts = state.chart.timeScale();
+  const container = $("#chart-container");
+  const W = container.clientWidth;
+  const H = container.clientHeight;
+
+  const xOf = (iso) => {
+    const x = ts.timeToCoordinate(iso);
+    if (x !== null) return x;
+    const vr = ts.getVisibleLogicalRange();
+    if (!vr) return null;
+    // clamp to edge if out of view
+    const barsFrom = ts.coordinateToLogical(0);
+    const barsTo   = ts.coordinateToLogical(W);
+    const idx = ts.timeToLogical(iso);
+    if (idx === null) return null;
+    return idx < barsFrom ? 0 : W;
+  };
+
+  const setBand = (el, isoA, isoB) => {
+    const x1 = xOf(isoA), x2 = xOf(isoB);
+    if (x1 === null || x2 === null) { el.style.display = "none"; return; }
+    const left  = Math.max(0, Math.min(x1, x2));
+    const right = Math.min(W, Math.max(x1, x2));
+    const width = right - left;
+    if (width < 1) { el.style.display = "none"; return; }
+    el.style.left    = left + "px";
+    el.style.width   = width + "px";
+    el.style.height  = H + "px";
+    el.style.display = "block";
+  };
+
+  setBand(state.bandBreakout, row.start_date, row.peak_date);
+
+  const end90 = new Date(row.peak_date);
+  end90.setDate(end90.getDate() + 90);
+  setBand(state.bandPostpeak, row.peak_date, end90.toISOString().slice(0, 10));
+}
+
 function destroyChart() {
   if (state.chart) { state.chart.remove(); state.chart = null; }
+  state.bandBreakout = null;
+  state.bandPostpeak = null;
+  state.bandRow = null;
 }
 
 async function renderChart(row) {
