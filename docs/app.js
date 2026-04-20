@@ -300,7 +300,7 @@ function wire() {
     set("#shareVolSlider", cfg.shareVol);
     set("#priceSlider",    cfg.price);
     set("#mcapMinSlider",  cfg.mcapMin);
-    set("#mcapMaxSlider",  cfg.mcapMax);
+    set("#mcapMaxSlider",  cfg.mcapMax || "");
     document.querySelectorAll("#exchangeChips .chip").forEach(c =>
       c.classList.toggle("on", cfg.exchanges.includes(c.dataset.e)));
     document.querySelectorAll("#countryChips .chip").forEach(c =>
