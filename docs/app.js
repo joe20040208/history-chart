@@ -101,7 +101,7 @@ function renderTable() {
     <tr data-i="${i}" class="${state.selected === r ? "active" : ""}">
       <td>${r.ticker}</td>
       <td class="pos">+${r.pct_gain.toFixed(0)}%</td>
-      <td title="${r.start_date} → ${r.peak_date}">${r.days_to_peak}</td>
+      <td>${r.days_to_peak}<span class="date-range">${r.start_date} → ${r.peak_date}</span></td>
       <td>${fmtMcap(r.start_mcap_usd)}</td>
       <td class="tag">${r.setup_tag || "—"}</td>
     </tr>
