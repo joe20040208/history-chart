@@ -269,6 +269,10 @@ async function renderChart(row) {
     { time: row.peak_date,  position: "aboveBar", color: "#d29922", shape: "arrowDown", text: "PEAK" },
   ]);
   state.chart.timeScale().fitContent();
+
+  // highlight bands — defer one frame so fitContent has applied
+  state.bandRow = row;
+  requestAnimationFrame(() => updateBands(row));
 }
 
 // ──────────────── selection / insights ────────────────
