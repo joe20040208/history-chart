@@ -215,6 +215,21 @@ function renderInsights(r) {
   `;
 }
 
+function fmtDateRange(isoA, isoB) {
+  const fmt = (iso) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+  const a = fmt(isoA), b = fmt(isoB);
+  const yearA = isoA.slice(0, 4), yearB = isoB.slice(0, 4);
+  if (yearA === yearB) {
+    const aNoYear = new Date(...isoA.split("-").map((v, i) => i === 1 ? v - 1 : +v))
+      .toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return `${aNoYear} – ${b}`;
+  }
+  return `${a} – ${b}`;
+}
+
 function buildCommentary(r) {
   const lines = [];
   if (r.setup_tag === "vcp")
@@ -223,8 +238,10 @@ function buildCommentary(r) {
     lines.push("Flat base near 52w highs — ideal entry is the top of the box on volume expansion.");
   if (r.setup_tag === "ipo_base")
     lines.push("Early IPO base — short trading history means high conviction once it clears the IPO high, smaller position sizing.");
-  if (r.setup_tag === "stage2_breakout")
-    lines.push("Stage-2 breakout over 30w EMA, tight ATR — Weinstein-style low-risk add.");
+  if (r.setup_tag === "stage2_breakout") {
+    const range = (r.start_date && r.peak_date) ? ` (${fmtDateRange(r.start_date, r.peak_date)})` : "";
+    lines.push(`Stage-2 breakout over 30w EMA, tight ATR${range} — Weinstein-style low-risk add.`);
+  }
   if (r.setup_tag === "power_trend")
     lines.push("Already in a power trend — entries are pullbacks to 10/21 EMA, not fresh bases.");
   if (r.setup_tag === "pocket_pivot")
@@ -233,8 +250,15 @@ function buildCommentary(r) {
     lines.push("No textbook base detected. Check: was there a specific catalyst (earnings, FDA, M&A)? These are often un-chartable and higher-risk.");
   if ((r.pre_52w_high ?? 0) < 0.75)
     lines.push("Started well off 52w highs — expect base-on-base dynamics; the second leg tends to be where the real money moves.");
-  if ((r.post_90d_return ?? 0) < -30)
-    lines.push("Gave back more than 30% in 90 days post-peak — study the topping structure for sell-signal practice.");
+  if ((r.post_90d_return ?? 0) < -30) {
+    let postRange = "";
+    if (r.peak_date) {
+      const peak = new Date(r.peak_date);
+      const end90 = new Date(peak); end90.setDate(end90.getDate() + 90);
+      postRange = ` (${fmtDateRange(r.peak_date, end90.toISOString().slice(0, 10))})`;
+    }
+    lines.push(`Gave back more than 30% in 90 days post-peak${postRange} — study the topping structure for sell-signal practice.`);
+  }
   return lines.join(" ") || "—";
 }
 
