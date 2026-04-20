@@ -161,8 +161,19 @@ function ensureChart() {
   state.ema20 = ema("#58a6ff");
   state.ema50 = ema("#a371f7");
 
-  window.addEventListener("resize", () => state.chart.applyOptions({
-    width: el.clientWidth, height: el.clientHeight }));
+  window.addEventListener("resize", () => {
+    state.chart.applyOptions({ width: el.clientWidth, height: el.clientHeight });
+    updateBands(state.bandRow);
+  });
+
+  // band overlay elements (sit inside the chart container, above canvas)
+  state.bandBreakout = makeBandEl("rgba(88,166,255,0.10)");
+  state.bandPostpeak = makeBandEl("rgba(248,81,73,0.10)");
+  el.style.position = "relative";
+  el.appendChild(state.bandBreakout);
+  el.appendChild(state.bandPostpeak);
+
+  state.chart.timeScale().subscribeVisibleTimeRangeChange(() => updateBands(state.bandRow));
 }
 
 function calcEMA(candles, span) {
