@@ -314,7 +314,7 @@ function wire() {
   const PRESETS = {
     usfilter: {
       pct: 50, price: 5, shareVol: 500,
-      mcapMin: 0.5, mcapMax: 20,
+      mcapMin: 0.5, mcapMax: 0,
       exchanges: ["NASDAQ","NYSE"],
       countries: ["US"],
       minAdrPct: 0.05,
@@ -391,6 +391,117 @@ function wire() {
     else if (e.key === "k" && idx > 0) selectRow(idx - 1);
   });
 }
+
+// ──────────────── similar setups modal ────────────────
+const simState = { matches: [], charts: [] };
+
+async function openSimilar() {
+  if (!state.selected) return;
+  const r = state.selected;
+  const modal = $("#similar-modal");
+  $("#similar-meta").textContent = "loading…";
+  $("#similar-grid").innerHTML = "";
+  modal.style.display = "block";
+
+  const url = `/api/similar/${r.country}/${r.exchange}/${encodeURIComponent(r.ticker)}?asof=${r.start_date}&max_results=30`;
+  let data;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      const err = await res.text();
+      $("#similar-meta").textContent = `error: ${err}`;
+      return;
+    }
+    data = await res.json();
+  } catch (e) {
+    $("#similar-meta").textContent = `error: ${e.message}`;
+    return;
+  }
+
+  simState.matches = data.matches || [];
+  $("#similar-meta").textContent =
+    `Query ${data.query.ticker}.${data.query.exchange} as of ${data.query.asof} · setup_tag=${data.query.setup_tag} · ${simState.matches.length} matches`;
+
+  if (simState.matches.length === 0) {
+    $("#similar-grid").innerHTML = `<div class="muted" style="grid-column:1/-1;text-align:center;padding:40px">${data.note || "no matches"}</div>`;
+    return;
+  }
+  renderSimilarGrid();
+}
+
+function renderSimilarGrid() {
+  // Tear down any prior charts to free memory
+  simState.charts.forEach(c => { try { c.remove(); } catch (e) {} });
+  simState.charts = [];
+
+  const minSim = (+$("#sim-threshold").value) / 100;
+  const grid = $("#similar-grid");
+  grid.innerHTML = "";
+  const visible = simState.matches.filter(m => m.similarity >= minSim);
+
+  if (visible.length === 0) {
+    grid.innerHTML = `<div class="muted" style="grid-column:1/-1;text-align:center;padding:40px">no matches above ${(minSim*100).toFixed(0)}% similarity</div>`;
+    return;
+  }
+
+  visible.forEach((m, i) => {
+    const post = m.post_90d_return;
+    const postColor = post == null ? "var(--muted)" : (post >= 0 ? "var(--green)" : "var(--red)");
+    const postTxt = post == null ? "—" : `${post >= 0 ? "+" : ""}${post.toFixed(1)}%`;
+    const card = document.createElement("div");
+    card.style.cssText = "background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:10px";
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+        <div><strong>${m.ticker}</strong>.${m.exchange} <span class="muted">${m.country}</span></div>
+        <div style="font-size:11px;color:var(--accent)">sim ${(m.similarity*100).toFixed(0)}%</div>
+      </div>
+      <div class="muted" style="font-size:11px;margin-bottom:6px">
+        ${m.start_date} → ${m.peak_date} · <span style="color:var(--green)">+${m.pct_gain.toFixed(0)}%</span> in ${m.days_to_peak}d
+        · post-90d <span style="color:${postColor}">${postTxt}</span>
+      </div>
+      <div id="sim-chart-${i}" style="width:100%;height:180px"></div>
+      <div class="muted" style="font-size:10px;margin-top:4px">${(m.name || "").slice(0, 60)}</div>
+    `;
+    grid.appendChild(card);
+
+    // Render mini chart in this card
+    const el = card.querySelector(`#sim-chart-${i}`);
+    const chart = LightweightCharts.createChart(el, {
+      width: el.clientWidth, height: 180,
+      layout: { background: { color: "transparent" }, textColor: "#8b949e", fontSize: 9 },
+      grid: { vertLines: { visible: false }, horzLines: { color: "#1f2630" } },
+      rightPriceScale: { borderColor: "#2a3240" },
+      timeScale: { borderColor: "#2a3240", timeVisible: false, rightOffset: 4 },
+      handleScroll: false, handleScale: false,
+    });
+    const candles = chart.addCandlestickSeries({
+      upColor: "#3fb950", downColor: "#f85149",
+      borderUpColor: "#3fb950", borderDownColor: "#f85149",
+      wickUpColor: "#3fb950", wickDownColor: "#f85149",
+    });
+    candles.setData(m.bars);
+    candles.setMarkers([
+      { time: m.start_date, position: "belowBar", color: "#58a6ff", shape: "arrowUp", text: "S" },
+      { time: m.peak_date, position: "aboveBar", color: "#d29922", shape: "arrowDown", text: "P" },
+    ]);
+    chart.timeScale().fitContent();
+    simState.charts.push(chart);
+  });
+}
+
+function closeSimilar() {
+  $("#similar-modal").style.display = "none";
+  simState.charts.forEach(c => { try { c.remove(); } catch (e) {} });
+  simState.charts = [];
+}
+
+$("#find-similar-btn").onclick = openSimilar;
+$("#similar-close").onclick = closeSimilar;
+$("#similar-modal").onclick = (e) => { if (e.target.id === "similar-modal") closeSimilar(); };
+$("#sim-threshold").oninput = (e) => {
+  $("#sim-threshold-val").textContent = `${e.target.value}%`;
+  renderSimilarGrid();
+};
 
 wire();
 loadRunners();

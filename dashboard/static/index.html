@@ -114,11 +114,32 @@
       <div id="chart-title" class="muted">Pick a row</div>
       <div id="chart-meta"></div>
       <a id="tv-link" href="#" target="_blank" class="tv">open in TradingView ↗</a>
+      <button id="find-similar-btn" class="tv" style="margin-left:12px;cursor:pointer;background:var(--accent);color:#fff;border:none;padding:4px 10px;border-radius:4px">Find similar ⌖</button>
     </header>
     <div id="chart-container"></div>
     <section id="insights"></section>
   </main>
 </div>
+
+<div id="similar-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;padding:24px;overflow:auto">
+  <div style="max-width:1400px;margin:0 auto;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:20px">
+    <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div>
+        <h2 style="margin:0">Similar historical setups</h2>
+        <div id="similar-meta" class="muted" style="margin-top:4px"></div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <label class="muted">min similarity
+          <input type="range" id="sim-threshold" min="0" max="100" value="0" style="vertical-align:middle">
+          <span id="sim-threshold-val">0%</span>
+        </label>
+        <button id="similar-close" style="background:transparent;color:var(--fg);border:1px solid var(--border);padding:6px 12px;border-radius:4px;cursor:pointer">Close ✕</button>
+      </div>
+    </header>
+    <div id="similar-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px"></div>
+  </div>
+</div>
+
 <script src="/static/app.js"></script>
 </body>
 </html>
