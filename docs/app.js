@@ -258,7 +258,7 @@ function wire() {
   const PRESETS = {
     usfilter: {
       pct: 50, price: 5, shareVol: 500,
-      mcapMin: 0.5, mcapMax: 20,
+      mcapMin: 0.5, mcapMax: 999,
       exchanges: ["NASDAQ", "NYSE"],
       countries: ["US"],
       minAdrPct: 0.05,
