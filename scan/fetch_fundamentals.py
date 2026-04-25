@@ -17,7 +17,14 @@ from tqdm import tqdm
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from config import EODHD_API_KEY, EODHD_BASE, EXCHANGES, UNIVERSE_DIR, FUND_DIR
 
-SESSION = requests.Session()
+import threading
+_local = threading.local()
+
+def _session():
+    if not hasattr(_local, "s"):
+        _local.s = requests.Session()
+    return _local.s
+
 MAX_WORKERS = 8
 
 
