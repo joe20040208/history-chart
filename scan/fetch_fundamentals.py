@@ -45,7 +45,7 @@ def fetch_one(country: str, exchange: str, code: str):
     params = {"api_token": EODHD_API_KEY, "filter": "General,Highlights,SharesStats"}
     for attempt in range(3):
         try:
-            r = SESSION.get(url, params=params, timeout=30)
+            r = _session().get(url, params=params, timeout=30)
             if r.status_code == 404:
                 path.write_text("{}")
                 return "404"
