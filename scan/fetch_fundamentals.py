@@ -25,7 +25,7 @@ def _session():
         _local.s = requests.Session()
     return _local.s
 
-MAX_WORKERS = 8
+MAX_WORKERS = 4
 
 
 def fund_path(country: str, exchange: str, code: str) -> Path:
