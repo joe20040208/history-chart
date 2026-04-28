@@ -54,13 +54,16 @@ def fetch_one(country: str, exchange: str, code: str):
                 continue
             r.raise_for_status()
             data = r.json()
+            general = data.get("General") or {}
+            highlights = data.get("Highlights")
+            shares_stats = data.get("SharesStats")
             slim = {
-                "currency":      (data.get("General") or {}).get("CurrencyCode"),
-                "sector":        (data.get("General") or {}).get("Sector"),
-                "industry":      (data.get("General") or {}).get("Industry"),
-                "name":          (data.get("General") or {}).get("Name"),
-                "mcap":          (data.get("Highlights") or {}).get("MarketCapitalization"),
-                "shares_current":(data.get("SharesStats") or {}).get("SharesOutstanding"),
+                "currency":      general.get("CurrencyCode"),
+                "sector":        general.get("Sector"),
+                "industry":      general.get("Industry"),
+                "name":          general.get("Name"),
+                "mcap":          highlights.get("MarketCapitalization") if isinstance(highlights, dict) else None,
+                "shares_current": shares_stats.get("SharesOutstanding") if isinstance(shares_stats, dict) else None,
                 "shares_history": {},
             }
             path.write_text(json.dumps(slim))
