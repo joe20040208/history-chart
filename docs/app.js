@@ -418,8 +418,5 @@ function wire() {
   });
 }
 
-// Load TradingView widget script then start
-const tvScript = document.createElement("script");
-tvScript.src = "https://s3.tradingview.com/tv.js";
-tvScript.onload = () => { wire(); loadRunners(); };
-document.head.appendChild(tvScript);
+wire();
+loadRunners();
