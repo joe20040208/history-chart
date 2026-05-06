@@ -207,7 +207,7 @@ async function renderChart(r) {
     height: el.clientHeight || 420,
     layout: { background: { color: "#0d1117" }, textColor: "#8b949e" },
     grid:   { vertLines: { color: "#1f2630" }, horzLines: { color: "#1f2630" } },
-    rightPriceScale: { borderColor: "#2a3240" },
+    rightPriceScale: { borderColor: "#2a3240", autoScale: true },
     timeScale: { borderColor: "#2a3240", timeVisible: true },
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
   });
