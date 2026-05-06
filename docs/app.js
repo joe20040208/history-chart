@@ -142,8 +142,10 @@ function yfSymbol(r) {
 async function fetchYahooOHLC(symbol, fromDate, toDate) {
   const p1 = Math.floor(new Date(fromDate).getTime() / 1000);
   const p2 = Math.floor(new Date(toDate).getTime()  / 1000) + 86400;
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}` +
-              `?interval=1d&period1=${p1}&period2=${p2}&events=splits`;
+  const yfUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}` +
+                `?interval=1d&period1=${p1}&period2=${p2}&events=splits`;
+  // Use CORS proxy since Yahoo Finance blocks direct browser requests from GitHub Pages
+  const url = `https://corsproxy.io/?url=${encodeURIComponent(yfUrl)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
