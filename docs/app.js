@@ -244,7 +244,7 @@ function selectRow(i) {
     `${r.start_date} → ${r.peak_date} · +${r.pct_gain.toFixed(0)}% in ${r.days_to_peak}d · ${r.sector || "—"}`;
   $("#tv-link").href = `https://www.tradingview.com/chart/?symbol=${tvSymbol(r)}`;
 
-  renderChart(r);
+  renderChart(r);   // async, intentionally not awaited
   renderInsights(r);
 }
 
