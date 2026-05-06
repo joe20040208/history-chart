@@ -161,7 +161,7 @@ async function fetchYahooOHLC(symbol, fromDate, toDate) {
     low:    q.low[i],
     close:  adj ? adj[i] : q.close[i],
     volume: q.volume[i],
-  })).filter(d => d.open != null && d.high != null && d.low != null && d.close != null);
+  })).filter(d => d.open > 0 && d.high > 0 && d.low > 0 && d.close > 0);
 }
 
 async function renderChart(r) {
