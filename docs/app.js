@@ -112,7 +112,9 @@ function renderTable() {
   };
 }
 
-// ──────────────── TradingView chart ────────────────
+// ──────────────── chart (Yahoo Finance + LightweightCharts) ────────────────
+let _lwChart = null;
+
 function tvSymbol(r) {
   const map = {
     "NASDAQ": "", "NYSE": "", "NYSE MKT": "", "NYSE ARCA": "", "AMEX": "", "BATS": "",
@@ -126,47 +128,107 @@ function tvSymbol(r) {
   return `${prefix}${r.ticker}`;
 }
 
-function renderChart(r) {
-  const container = $("#chart-container");
-  container.innerHTML = "";
+function yfSymbol(r) {
+  const exch = r.sub_exchange || r.exchange;
+  if (r.country === "US") return r.ticker;
+  if (exch === "HK")  return r.ticker.padStart(4, "0") + ".HK";
+  if (exch === "TW")  return r.ticker + ".TW";
+  if (exch === "TWO") return r.ticker + ".TWO";
+  if (exch === "KO")  return r.ticker + ".KS";
+  if (exch === "KQ")  return r.ticker + ".KQ";
+  return r.ticker;
+}
 
-  // TradingView's free embed widget is licensed for US exchanges only —
-  // KRX/TWSE/TPEX/HKEX symbols load but display "only available on TradingView".
-  // Show a link button instead so the user can open the full chart on tradingview.com.
-  if (r.country !== "US") {
-    const url = `https://www.tradingview.com/chart/?symbol=${tvSymbol(r)}`;
+async function fetchYahooOHLC(symbol, fromDate, toDate) {
+  const p1 = Math.floor(new Date(fromDate).getTime() / 1000);
+  const p2 = Math.floor(new Date(toDate).getTime()  / 1000) + 86400;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}` +
+              `?interval=1d&period1=${p1}&period2=${p2}&events=splits`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  const result = data.chart?.result?.[0];
+  if (!result) throw new Error("no result");
+  const ts  = result.timestamp;
+  const q   = result.indicators.quote[0];
+  const adj = result.indicators.adjclose?.[0]?.adjclose;
+  return ts.map((t, i) => ({
+    time:   new Date(t * 1000).toISOString().slice(0, 10),
+    open:   q.open[i],
+    high:   q.high[i],
+    low:    q.low[i],
+    close:  adj ? adj[i] : q.close[i],
+    volume: q.volume[i],
+  })).filter(d => d.open != null && d.high != null && d.low != null && d.close != null);
+}
+
+async function renderChart(r) {
+  const container = $("#chart-container");
+  container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px">Loading chart…</div>`;
+
+  if (_lwChart) { try { _lwChart.remove(); } catch(e){} _lwChart = null; }
+
+  const symbol = yfSymbol(r);
+  const start  = new Date(r.start_date);
+  const peak   = new Date(r.peak_date);
+  const from   = new Date(start); from.setMonth(from.getMonth() - 6);
+  const to     = new Date(peak);  to.setMonth(to.getMonth() + 2);
+
+  let bars;
+  try {
+    bars = await fetchYahooOHLC(symbol, from.toISOString().slice(0,10), to.toISOString().slice(0,10));
+  } catch(e) {
+    // fallback: TradingView link
+    const tvUrl = `https://www.tradingview.com/chart/?symbol=${tvSymbol(r)}`;
     container.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--muted)">
-        <div style="font-size:14px">TradingView 嵌入圖表不支援非美國市場</div>
-        <a href="${url}" target="_blank" style="background:var(--accent);color:#fff;padding:10px 24px;border-radius:6px;text-decoration:none;font-size:14px">
-          在 TradingView 開啟 ${tvSymbol(r)} ↗
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;color:var(--muted)">
+        <div style="font-size:13px">無法從 Yahoo Finance 載入圖表 (${e.message})</div>
+        <a href="${tvUrl}" target="_blank" style="background:var(--accent);color:#fff;padding:8px 20px;border-radius:5px;text-decoration:none;font-size:13px">
+          在 TradingView 開啟 ↗
         </a>
       </div>`;
     return;
   }
 
-  const widget = document.createElement("div");
-  widget.id = "tv-widget";
-  widget.style.width = "100%";
-  widget.style.height = "100%";
-  container.appendChild(widget);
+  if (!bars.length) {
+    container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted)">No data from Yahoo Finance for ${symbol}</div>`;
+    return;
+  }
 
-  new TradingView.widget({
-    container_id: "tv-widget",
-    symbol: tvSymbol(r),
-    interval: "D",
-    timezone: "Etc/UTC",
-    theme: "dark",
-    style: "1",
-    locale: "en",
-    hide_top_toolbar: false,
-    hide_legend: false,
-    save_image: false,
-    allow_symbol_change: true,
-    width: "100%",
-    height: "100%",
-    autosize: true,
+  container.innerHTML = "";
+  const el = document.createElement("div");
+  el.style.cssText = "width:100%;height:100%";
+  container.appendChild(el);
+
+  const chart = LightweightCharts.createChart(el, {
+    width:  el.clientWidth,
+    height: el.clientHeight || 420,
+    layout: { background: { color: "#0d1117" }, textColor: "#8b949e" },
+    grid:   { vertLines: { color: "#1f2630" }, horzLines: { color: "#1f2630" } },
+    rightPriceScale: { borderColor: "#2a3240" },
+    timeScale: { borderColor: "#2a3240", timeVisible: true },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
   });
+  _lwChart = chart;
+
+  const candles = chart.addCandlestickSeries({
+    upColor:        "#3fb950", downColor:        "#f85149",
+    borderUpColor:  "#3fb950", borderDownColor:  "#f85149",
+    wickUpColor:    "#3fb950", wickDownColor:    "#f85149",
+  });
+  candles.setData(bars);
+
+  candles.setMarkers([
+    { time: r.start_date, position: "belowBar", color: "#58a6ff", shape: "arrowUp",   text: "Start" },
+    { time: r.peak_date,  position: "aboveBar", color: "#d29922", shape: "arrowDown", text: "Peak"  },
+  ]);
+
+  chart.timeScale().fitContent();
+
+  const ro = new ResizeObserver(() => {
+    chart.applyOptions({ width: el.clientWidth, height: el.clientHeight || 420 });
+  });
+  ro.observe(el);
 }
 
 // ──────────────── selection / insights ────────────────
