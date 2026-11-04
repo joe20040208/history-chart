@@ -18,3 +18,21 @@ node render.js        # renders output/*.png at 2x (needs Playwright + Chromium)
 ```
 
 `assets/` holds the logo, its outer silhouette (used for die-cut tea-bag tags) and the wordmark. They were vectorised from the supplied artwork.
+
+## 標準字風格圖示（icons/）
+
+The 28 wayfinding icons are drawn from the stroke features of the 新北市土城區公所 wordmark:
+- **Thin vs. bold**: hairline strokes against bold vertical bars (新, 北, 市, 所).
+- **Frames**: frames with one bold side (區).
+- **Diagonals**: thin-and-bold diagonal pairs (公).
+- **Crossbars**: horizontal strokes overshoot the verticals (土).
+- **Shapes**: right-angle hooks and square dots, with no curves.
+
+| 檔案 | 用途 |
+| --- | --- |
+| `icons/tucheng-icons.ai` | PDF-compatible Illustrator file. The icons are editable strokes and the labels are outlined. |
+| `icons/tucheng-icons.pdf` | The same artwork as a PDF. |
+| `icons/tucheng-icons-sheet.svg` / `.png` | The full icon sheet, plus a preview image. |
+| `icons/svg/*.svg`, `icons/tucheng-icons-svg.zip` | Each icon on its own 96 × 96 artboard. |
+
+Grid: 96 × 96, hairline 4, bold 11, colour `#9A3439`. Regenerate with `python3 icons.py && node render_icons.js`.
