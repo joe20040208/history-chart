@@ -36,3 +36,15 @@ The 28 wayfinding icons are drawn from the stroke features of the 新北市土�
 | `icons/svg/*.svg`, `icons/tucheng-icons-svg.zip` | Each icon on its own 96 × 96 artboard. |
 
 Grid: 96 × 96, hairline 4, bold 11, colour `#9A3439`. Regenerate with `python3 icons.py && node render_icons.js`.
+
+### 深灰透明版（icons/darkgray/）
+
+This version is dark gray `#333333` on a transparent background, with no labels or tiles.
+
+| 檔案 | 用途 |
+| --- | --- |
+| `darkgray/png/*.png`, `tucheng-icons-darkgray-png.zip` | One transparent 1024 × 1024 PNG per icon. |
+| `darkgray/svg/*.svg`, `tucheng-icons-darkgray-svg.zip` | One 96 × 96 SVG per icon, with no background. |
+| `darkgray/tucheng-icons-darkgray.ai` / `.pdf` / `.svg` / `.png` | All 28 icons on one transparent sheet. |
+
+Regenerate with `python3 export_darkgray.py && node render_darkgray.js`. Use `SIZE=2048` to change the PNG size.
